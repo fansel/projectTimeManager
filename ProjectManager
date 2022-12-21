@@ -1,0 +1,48 @@
+import os
+import Project
+
+class ProjectManager:
+    def __init__(self):
+        self.projects = {}
+        self.load_projects()
+    
+    def load_projects(self):
+        project_filenames = os.listdir("./projects")
+        try:
+            for filename in project_filenames:
+              name, _ = os.path.splitext(filename)
+              project = Project(name)
+              self.projects[name] = project
+              print(f"Loaded project {name}")
+        except FileNotFoundError:
+            print("No projects found")
+
+    def add_project(self, project):
+        self.projects[project.name] = project
+
+    def get_project(self, name):
+        try:
+            return self.projects[name]
+        except KeyError:
+            return None
+
+    def delete_project(self, name):
+        try:
+            del self.projects[name]
+        except KeyError:
+            print(f"Project with name {name} not found")
+
+    def get_total_duration(self):
+        total_duration = 0
+        for project in self.projects.values():
+            for time_record in project.time_records.values():
+                total_duration += time_record.duration
+        return total_duration
+
+    def create_report(self):
+        report = {}
+        for project in self.projects.values():
+            report[project.name] = project.get_total_hours()
+            
+        return report
+
