@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from TimeTracker import TimeTracker 
+from timetracker import TimeTracker 
 import datetime
 
 
@@ -113,11 +113,17 @@ class TimeTrackerGUI:
             else:
                 end_time = {"date": "", "time": ""}
             if item is not None:
-                date_start = datetime.datetime.strptime(item["start_time"]["date"], "%d.%m.%Y").date()
-                time_start = datetime.datetime.strptime(item["start_time"]["time"], "%H:%M:%S").time()
-                start_time = datetime.datetime.combine(date_start, time_start)
-                if start_time >= self.filter:
-                  self.timetable.insert("", "end", text=item["start_time"]["date"], values=(item["start_time"]["time"], item["end_time"]["time"],self.tracker.duration))
+                try: 
+                    date_start = datetime.datetime.strptime(item["start_time"]["date"], "%d.%m.%Y").date()
+                    time_start = datetime.datetime.strptime(item["start_time"]["time"], "%H:%M:%S").time()
+                    start_time = datetime.datetime.combine(date_start, time_start)
+                    date_end = datetime.datetime.strptime(item["end_time"]["date"], "%d.%m.%Y").date()
+                    time_end = datetime.datetime.strptime(item["end_time"]["time"], "%H:%M:%S").time()
+                    end_time = datetime.datetime.combine(date_end, time_end)
+                    if start_time >= self.filter:
+                        self.timetable.insert("", "end", text=item["start_time"]["date"], values=(item["start_time"]["time"], item["end_time"]["time"],self.tracker.getDurationBetween(start_time, end_time)))
+                except:
+                    pass
         self.hours.config(text="Gesamtstunden: "+str(self.tracker.get_total_hours("times.json"))+" Stunden")
 
 
@@ -140,6 +146,8 @@ def main():
 
 if __name__ == "__main__":
     main()    
+
+
 
 
 
