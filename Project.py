@@ -10,7 +10,22 @@ class Project:
         self.time_records = {}
         self.filename = os.path.join("./projects", f"{name}.json")
         self.load_time_records()
-## 
+
+    def rename(self, new_name):
+        if os.path.exists(new_name+".json"): 
+           print("Project already exists")
+        else:   
+            newFilename = os.path.join("./projects", f"{new_name}.json")
+            os.rename(self.filename, newFilename)
+            self.filename = newFilename
+            self.name = new_name
+            print(f"Renamed project to {self.name}")
+
+
+           
+            
+    def name(self):
+        return self.name
     def create_file(self):
         if not os.path.exists("./projects"):
             os.mkdir("./projects")
@@ -18,21 +33,18 @@ class Project:
         if not os.path.exists(self.filename):
             with open(self.filename, "w") as file:
                 print(f"Created {self.filename} file")
-##  
-   
 
+    def delete_file(self):
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+            print(f"Deleted {self.filename} file")
 
-
-  
-
-
-
-
+                
     def write_time_record(self, start_time, end_time):
         time_record = TimeRecord(start_time, end_time)
         self.time_records[time_record.start_time] = time_record
         self.save_to_file()
-##
+
 
     def save_to_file(self):
         data = []
@@ -43,8 +55,7 @@ class Project:
         with open(self.filename, "w") as file:
             
             json.dump(data, file,indent=4)
-            
-
+        
 
     def load_time_records(self):
         tempRecords= self.time_records
@@ -56,8 +67,6 @@ class Project:
                     end_time = record["end_time"]
                     time_record = TimeRecord(start_time, end_time)
                     self.time_records[start_time] = time_record
-                    print(data)
-                    print(self.time_records)
                 return self.time_records
         except FileNotFoundError:
             self.create_file()
@@ -77,6 +86,9 @@ class Project:
             return self.time_records[start_time]
         except KeyError:
             return TimeRecord("","")
+    def get_time_records(self):
+        self.load_time_records()
+        return self.time_records
 
     @dispatch(TimeRecord)
     def delete_time_record(self, time_record):# pyright: ignore
@@ -90,18 +102,19 @@ class Project:
         except Exception as e:
             print(e)
 
-        
-        
-        
-
     def get_total_hours(self):
         total_time = 0
         for time_record in self.time_records.values():
             total_time += time_record.duration
             #return total_time in minutes
-        return round(total_time,1)
+        return round(total_time/ 60,1) 
 
     def print_time_records(self):
         for time_record in self.time_records.values():
             print(time_record)
             
+    def get_LastTimeRecord(self):
+        if len(self.time_records) == 0:
+            return TimeRecord("","")
+        else:
+            return self.time_records[list(self.time_records)[-1]]
