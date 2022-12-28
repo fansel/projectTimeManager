@@ -40,6 +40,6 @@ python startscreen.py
 ## Bugs 
 
 - [x] Man kann ein leeres Projekt erstellen, welches später zu .json wird (Status: Gelöst)
-- [] Man kann manchmal ein Projekt mit sich selbst zusammenführen, bis jetzt nur bei Windows aufgetreten (EXE) (Status: Wird überarbeitet)
+- [ ] Man kann manchmal ein Projekt mit sich selbst zusammenführen, bis jetzt nur bei Windows aufgetreten (EXE) (Status: Wird überarbeitet)
 - [x] Wenn der Dateiname zu lang ist, wird die Datei nicht erstellt, so dass die Zeit nicht gespeichert wird (Status: Gelöst)
 
