@@ -1,3 +1,4 @@
+For the English version of this README, click [here](https://github.com/fansel/projectTimeManager/blob/main/README-en.md).
 # Zeiterfassungstool
 
 Dieses Zeiterfassungstool ermöglicht es, die gearbeiteten Stunden für verschiedene Projekte zu tracken.
@@ -48,4 +49,5 @@ python startscreen.py
 - [x] Man kann ein leeres Projekt erstellen, welches später zu .json wird (Status: Gelöst)
 - [ ] Man kann manchmal ein Projekt mit sich selbst zusammenführen, bis jetzt nur bei Windows aufgetreten (EXE) (Status: Wird überarbeitet)
 - [x] Wenn der Dateiname zu lang ist, wird die Datei nicht erstellt, so dass die Zeit nicht gespeichert wird (Status: Gelöst)
+
 
