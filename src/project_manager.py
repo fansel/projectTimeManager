@@ -10,7 +10,7 @@ import shutil
 from timetracker import TimeTracker 
 
 
-class Application:
+class ProjectManager:
     def __init__(self):
 
 

@@ -4,21 +4,21 @@ from project import Project
 from timerecord import TimeRecord
 from timetracker import TimeTracker 
 import datetime
-from application import Application
+from project_manager import ProjectManager
 from stringbuilder import StringBuilder as sb
 import logging
-from startscreen import ProjectSelection
+from project_selection_gui import ProjectSelection
 import sys
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 class MainsScreen():
     """A class that creates a GUI with a Play-Pause button and a table."""
-    def __init__(self,window,app:Application):
+    def __init__(self,window,pm:ProjectManager):
         self.window = window
-        self.app = app
+        self.pm = pm
         self.window.closeEvent = self.on_closeEvent
-        self.tracker = self.app.current_tracker
-        self.project = Project(self.app.current_project.name)
+        self.tracker = self.pm.current_tracker
+        self.project = Project(self.pm.current_project.name)
         self.progstart = datetime.datetime.now()
         self.filter = self.progstart
         self.createWidgets()
@@ -152,7 +152,7 @@ class MainsScreen():
             return
         else:
             menu = QtWidgets.QMenu()
-            if len(self.app.projects) >= 2: 
+            if len(self.pm.projects) >= 2: 
                 menu.addAction("zu Projekt verschieben")
             menu.addAction("löschen")
             
@@ -165,26 +165,26 @@ class MainsScreen():
                     return
                 if action.text() == "löschen":
                     uuid = self.timetable.item(self.timetable.currentRow(), 4).text()
-                    if self.app.current_project.get_time_record(uuid).end_time==None:
+                    if self.pm.current_project.get_time_record(uuid).end_time==None:
                         QMessageBox.warning(self.window, "Fehler", "Du kannst keine laufenden Aufzeichnungen löschen!")
                         return
-                    delete = QtWidgets.QMessageBox.question(self.window, "Löschen", "Wirklich löschen?\nDie Dauer beträgt "+str(round(self.app.current_project.get_time_record(uuid).duration))+" Minute(n)", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                    delete = QtWidgets.QMessageBox.question(self.window, "Löschen", "Wirklich löschen?\nDie Dauer beträgt "+str(round(self.pm.current_project.get_time_record(uuid).duration))+" Minute(n)", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if delete == QtWidgets.QMessageBox.Yes:
-                        self.app.current_project.delete_time_record(uuid)
+                        self.pm.current_project.delete_time_record(uuid)
                         self.timetable.removeRow(self.timetable.currentRow())
                 if action.text() == "zu Projekt verschieben":
-                    if self.app.current_project.get_time_record(self.timetable.item(self.timetable.currentRow(), 4).text()).end_time==None or self.tracker.is_running:
+                    if self.pm.current_project.get_time_record(self.timetable.item(self.timetable.currentRow(), 4).text()).end_time==None or self.tracker.is_running:
                         QMessageBox.warning(self.window, "Fehler", "Du kannst keine Aufzeichnungen verschieben während eine Aufzeichnung läuft")
                         return
                     submenu = QtWidgets.QMenu()
-                    for project in self.app.projects:
-                        if project == self.app.current_project.name:
+                    for project in self.pm.projects:
+                        if project == self.pm.current_project.name:
                             continue
                         submenu.addAction(project)
                     action = submenu.exec_(self.timetable.mapToGlobal(pos))
                     if action == None:
                         return
-                    self.app.moveTimeRecord(action.text(), self.app.current_project.get_time_record(self.timetable.item(self.timetable.currentRow(), 4).text()))
+                    self.pm.moveTimeRecord(action.text(), self.pm.current_project.get_time_record(self.timetable.item(self.timetable.currentRow(), 4).text()))
                     self.reloadTable()
 
 
@@ -285,7 +285,7 @@ class MainsScreen():
             if uuid == self.tracker.timerecord.uuid:
                 self.tracker.description = self.timetable.item(self.timetable.currentRow(), 5).text()
             else:
-                self.app.current_project.addDescriptionToUUID(uuid, self.timetable.item(self.timetable.currentRow(), 5).text())
+                self.pm.current_project.addDescriptionToUUID(uuid, self.timetable.item(self.timetable.currentRow(), 5).text())
        
 
         
@@ -295,7 +295,7 @@ class MainsScreen():
         self.timetable.setRowCount(0)
 
         try:
-            for timeRecord in self.app.current_project.get_time_records().values():
+            for timeRecord in self.pm.current_project.get_time_records().values():
                     start_time_datetime = datetime.datetime.fromisoformat(timeRecord.start_time)
                     end_time_datetime = datetime.datetime.fromisoformat(timeRecord.end_time)
                     # If filter is enabled, only show entries after the filter date
@@ -328,7 +328,7 @@ class MainsScreen():
     def update_table(self):
             """Aktualisiert die Tabelle."""
             try:
-                timeRecord=self.app.current_project.get_LastTimeRecord()
+                timeRecord=self.pm.current_project.get_LastTimeRecord()
                 start_time_datetime = datetime.datetime.fromisoformat(timeRecord.start_time)
                 end_time_datetime = datetime.datetime.fromisoformat(timeRecord.end_time)
                 self.timetable.removeRow(0)

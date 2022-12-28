@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QListWidget, QPushButton, QLabel, QMessageBox, QLineEdit, QInputDialog, QMenu , QVBoxLayout, QGridLayout, QComboBox, QFileDialog
 from PyQt5.QtCore import Qt
-import mainscreen as mainscreen
+import tracker_gui as tracker_gui
 from project import Project
 from timerecord import TimeRecord
 from timetracker import TimeTracker 
 import datetime
-from application import Application
+from project_manager import ProjectManager
 from stringbuilder import StringBuilder as sb
 import logging
 import sys
@@ -16,7 +16,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 class ProjectSelection():
     def __init__(self,master:QWidget):
-        self.app = Application()
+        self.pm = ProjectManager()
         self.frame = master
         self.project_list = QListWidget(self.frame)
 
@@ -43,7 +43,7 @@ class ProjectSelection():
         self.import_button.clicked.connect(self.on_import_button_click)
         self.export_button = QPushButton(self.frame, text="Exportieren")
         self.export_button.clicked.connect(self.on_export_button_click)
-        self.total_time_label = QLabel(self.frame, text="Zeit: "+sb.stringForTime(self.app.get_total_hours()))
+        self.total_time_label = QLabel(self.frame, text="Zeit: "+sb.stringForTime(self.pm.get_total_hours()))
         self.init_project_list()
 
       #knöpfe anzeigen 
@@ -60,7 +60,7 @@ class ProjectSelection():
 
     def init_project_list(self):
         self.project_list.clear()
-        for projectName in self.app.projects:
+        for projectName in self.pm.projects:
             self.project_list.addItem(projectName)
         self.project_list.sortItems()
         #if one project in the list, select it dont show self.context_menu.addAction("Löschen und zusammenführen", self.on_merge_project)
@@ -77,36 +77,40 @@ class ProjectSelection():
         if self.project_list.currentRow() == -1:
             QMessageBox.critical(None, "Fehler", "Kein Projekt ausgewählt.")
             return
-        self.app.archive_project(self.project_list.currentItem().text())
+        self.pm.archive_project(self.project_list.currentItem().text())
         self.init_project_list()
 
 
     def on_open_archive_button_click(self):
         """Wird aufgerufen, wenn der Archiv-Button gedrückt wird."""
-        #open a new window with a list of archived projects
+        self.pm.load_archive_projects_names()
+        if len(self.pm.archived_projects) == 0:
+            QMessageBox.information(None, "Keine Projekte", "Es sind keine Projekte archiviert.")
+            return
         self.archived_projects_window = QWidget()
         self.archived_projects_window_layout = QVBoxLayout()
         self.archived_projects_list = QListWidget(self.archived_projects_window)
+        self.archived_projects_window.setWindowTitle("Archiv")
+        self.archived_projects_window.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.archived_projects_window.setLayout(self.archived_projects_window_layout)
-        self.archived_projects_window.setWindowTitle("Archivierte Projekte")
-        self.archived_projects_window.setWindowModality(Qt.ApplicationModal)
         self.archived_projects_window.show()
-        #add a button to unarchive a project
-        self.unarchive_button = QPushButton(self.archived_projects_window, text="wiederherstellen")
+        self.unarchive_button = QPushButton(self.archived_projects_window, text="Wiederherstellen")
+        self.archived_projects_window_layout.addWidget(self.archived_projects_list)
         self.archived_projects_window_layout.addWidget(self.unarchive_button)
+        self.archived_projects_window_layout.setAlignment(self.unarchive_button, Qt.AlignBottom)
+        self.archived_projects_window.setMinimumSize(200, 100)
         self.unarchive_button.clicked.connect(self.on_unarchive_button_click)
         self.loadArchiveList()
-        #resize window to fit the list
-        self.archived_projects_window.resize(self.archived_projects_list.sizeHintForColumn(0) + 50, self.archived_projects_list.sizeHintForRow(0) * self.archived_projects_list.count() + 50)
+
+
 
 
     def loadArchiveList(self):
         self.archived_projects_list.clear()
-        self.app.load_archive_projects_names()
-        for projectName in self.app.archived_projects:
+        self.pm.load_archive_projects_names()
+        for projectName in self.pm.archived_projects:
             self.archived_projects_list.addItem(projectName)
         self.archived_projects_list.sortItems()
-        self.archived_projects_window_layout.addWidget(self.archived_projects_list)
         
 
     def on_unarchive_button_click(self):
@@ -115,8 +119,10 @@ class ProjectSelection():
         if self.archived_projects_list.currentRow() == -1:
             QMessageBox.critical(None, "Fehler", "Kein Projekt ausgewählt.")
             return
-        self.app.unarchive_project(self.archived_projects_list.currentItem().text())
+        self.pm.unarchive_project(self.archived_projects_list.currentItem().text())
         self.loadArchiveList()
+        if self.archived_projects_list.count() == 0:
+            self.archived_projects_window.close()
         self.init_project_list()
 
 
@@ -125,7 +131,7 @@ class ProjectSelection():
         """Wird aufgerufen, wenn der Import-Button gedrückt wird."""
         file_name = QFileDialog.getOpenFileName(self.frame, "Importieren", "", "JSON-Dateien (*.json)")
         if file_name[0] != "" and file_name[0].endswith(".json"):
-            self.app.import_project(file_name[0])
+            self.pm.import_project(file_name[0])
             self.init_project_list()
 
     def on_export_button_click(self):
@@ -136,7 +142,7 @@ class ProjectSelection():
             return
         file_name = QFileDialog.getSaveFileName(self.frame, "Exportieren", "", "JSON-Dateien (*.json)")
         if file_name[0] != "" and file_name[0].endswith(".json"):
-            self.app.export_project(self.project_list.currentItem().text(), file_name[0])
+            self.pm.export_project(self.project_list.currentItem().text(), file_name[0])
 
         
     def on_merge_project(self):
@@ -164,7 +170,7 @@ class ProjectSelection():
         self.merge_window_button.clicked.connect(self.on_merge_button_click)
         self.merge_window_layout.addWidget(self.merge_window_button)
         #fill the list with all projects
-        for projectName in self.app.projects:
+        for projectName in self.pm.projects:
             if projectName != self.project_list.currentItem().text():
                 self.merge_window_list.addItem(projectName)
         self.merge_window_list.sortItems()
@@ -175,7 +181,7 @@ class ProjectSelection():
         if self.merge_window_list.currentRow() == -1:
             QMessageBox.critical(None, "Fehler", "Kein Projekt ausgewählt.")
             return
-        self.app.merge_projects(self.merge_window_list.currentItem().text(),self.project_list.currentItem().text())
+        self.pm.merge_projects(self.merge_window_list.currentItem().text(),self.project_list.currentItem().text())
         self.init_project_list()
         self.merge_window.close()
 
@@ -183,7 +189,7 @@ class ProjectSelection():
         
 
     def on_project_list_double_click(self):
-        self.app.select_project(self.project_list.currentItem().text())
+        self.pm.select_project(self.project_list.currentItem().text())
         self.frame.close()
         self.start(self.project_list.currentItem().text())
 
@@ -198,16 +204,16 @@ class ProjectSelection():
             newName, ok = QInputDialog.getText(self.project_list, 'Umbenenen', 'Neuen Namen festlegen:')
             if ok:
                 #prüfe ob der name schon vergeben ist
-                if newName in self.app.projects:
+                if newName in self.pm.projects:
                     QMessageBox.critical(None, "Fehler", "Projektname bereits vergeben.")
                     return
                 if newName.isspace()or newName == "":
                     QMessageBox.critical(None, "Fehler", "Projektname darf nicht leer sein.")
                     return
-                if len(newName) >= 255:
-                    QMessageBox.critical(None, "Fehler", "Projektname darf nicht länger als 255 Zeichen sein.")
+                if len(newName) >= 200:
+                    QMessageBox.critical(None, "Fehler", "Projektname darf nicht länger als 200 Zeichen sein.")
                     return
-                self.app.rename_project(selectedItem.text(),newName)
+                self.pm.rename_project(selectedItem.text(),newName)
                 # Update the item's text
                 selectedItem.setText(newName)
                 self.project_list.sortItems()
@@ -236,7 +242,7 @@ class ProjectSelection():
         if self.project_list.currentRow() == -1:
             QMessageBox.critical(None, "Fehler", "Kein Projekt ausgewählt.")
             return
-        self.app.select_project(self.project_list.currentItem().text())
+        self.pm.select_project(self.project_list.currentItem().text())
         self.frame.close()
         self.start(self.project_list.currentItem().text())
 
@@ -244,7 +250,7 @@ class ProjectSelection():
     def start(self,name):
        # öffne ein GUI fenster der Klasse Gui
         self.frame = QWidget()
-        self.mainscreen = mainscreen.MainsScreen(self.frame,self.app)
+        self.mainscreen = tracker_gui.MainsScreen(self.frame,self.pm)
         self.frame.setWindowTitle(name)
         self.frame.setFixedSize(800, 600)
         self.frame.show()
@@ -261,7 +267,7 @@ class ProjectSelection():
     def on_new_project_button_click(self):
         newName, ok = QInputDialog.getText(self.project_list, 'Erstellen', 'Neuen Namen festlegen:')
         if ok:
-            if newName in self.app.projects:
+            if newName in self.pm.projects:
                 QMessageBox.critical(None, "Fehler", "Projektname bereits vergeben.")
                 return
             elif newName.isspace() or newName == "":
@@ -270,10 +276,10 @@ class ProjectSelection():
             elif len(newName) >= 200:
                 QMessageBox.critical(None, "Fehler", "Projektname darf nicht länger als 255 Zeichen sein.")
                 return
-            elif newName in self.app.projects:
+            elif newName in self.pm.projects:
                 QMessageBox.critical(None, "Fehler", "Projektname bereits vorhanden.")
             else:
-                self.app.add_project(newName)
+                self.pm.add_project(newName)
                 self.init_project_list()
 
 
@@ -281,7 +287,7 @@ class ProjectSelection():
 
 
     def on_new_project_entry_return(self):
-        self.app.add_project(self.new_project_entry.text())
+        self.pm.add_project(self.new_project_entry.text())
         self.project_list.addItem(self.new_project_entry.text())
         self.new_project_window.close()
 
@@ -293,10 +299,10 @@ class ProjectSelection():
             return
         if QMessageBox.question(None, "Projekt löschen?", "Projekt wirklich löschen?", QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
           
-            self.app.delete_project(self.project_list.currentItem().text())
+            self.pm.delete_project(self.project_list.currentItem().text())
             self.init_project_list()
 
-            self.total_time_label.setText("Zeit: "+sb.stringForTime(self.app.get_total_hours()))
+            self.total_time_label.setText("Zeit: "+sb.stringForTime(self.pm.get_total_hours()))
 
 
 
@@ -314,7 +320,6 @@ def main():
         app.setStyle("Fusion")
         #immer hellles theme
         app.setPalette(QApplication.style().standardPalette())
-        app.setWindowIcon(QtGui.QIcon('icon.jpeg'))
         window = QWidget()
         window.setWindowTitle("Projekt auswählen")
         window.setWindowModality(Qt.WindowModality.ApplicationModal)
