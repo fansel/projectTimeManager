@@ -7,11 +7,13 @@ Usage:
 
 from setuptools import setup
 
-APP = ['timetrackergui.py']
-DATA_FILES = ['times.json', 'timeTracker.py']
+APP = ['startscreen.py']
+DATA_FILES = ['project.py', 'timerecord.py', 'timetracker.py', 'application.py','mainscreen.py', 'stringbuilder.py','icon.jpeg']
 OPTIONS = {}
 
 setup(
+    name="Projekt Manager",
+    version="1.0",
     app=APP,
     data_files=DATA_FILES,
     options={'py2app': OPTIONS},
