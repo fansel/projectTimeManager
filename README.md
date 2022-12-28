@@ -20,12 +20,18 @@ Dieses Zeiterfassungstool ermöglicht es, die gearbeiteten Stunden für verschie
 
 ## Installation
 
-Klone das Repository auf deinen Computer:
+1. Klone das Repository auf deinen Computer:
+```
 git clone https://github.com/fansel/projecTimeManager.git
-Installiere die benötigten Abhängigkeiten:
+```
+2. Installiere die benötigten Abhängigkeiten:
+```
 pip install -r requirements.txt (noch nicht hochgeladen)
-Führe das Programm aus:
+```
+3. Führe das Programm aus:
+```
 python startscreen.py
+```
 
 ## Verwendung
 
