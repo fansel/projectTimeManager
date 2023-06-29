@@ -31,7 +31,7 @@ pip install -r requirements.txt (noch nicht hochgeladen)
 ```
 3. Führe das Programm aus:
 ```
-python startscreen.py
+python project-selection-gui.py
 ```
 
 ## Verwendung
