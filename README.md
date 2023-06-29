@@ -27,11 +27,11 @@ git clone https://github.com/fansel/projecTimeManager.git
 ```
 2. Installiere die benötigten Abhängigkeiten:
 ```
-pip install -r requirements.txt (noch nicht hochgeladen)
+pip3 install -r requirements.txt (noch nicht hochgeladen)
 ```
 3. Führe das Programm aus:
 ```
-python project-selection-gui.py
+python3 project_selection_gui.py
 ```
 
 ## Verwendung
